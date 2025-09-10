@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link"; // ✅ import Link
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("demo@taskflow.com");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState("");
   const [showDashboard, setShowDashboard] = useState(false);
+  const router=useRouter();
 
   const dateString = useMemo(
     () =>
@@ -27,15 +29,67 @@ export default function LoginPage() {
     }
   }, [showDashboard]);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (email === "demo@taskflow.com" && password === "password123") {
-      setError("");
-      setShowDashboard(true);
-    } else {
-      setError("Invalid email or password");
+  // Get redirect URL from query params if available
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      // Store redirect path in sessionStorage
+      sessionStorage.setItem('redirectAfterLogin', redirect);
     }
+  }, []);
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault(); // ✅ stop page reload
+
+  try {
+    const f = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    if (!f.ok) {
+      // handle non-200 responses
+      const err = await f.json();
+      setError(err.error || "Login failed");
+      return;
+    }
+
+    const data = await f.json();
+      console.log("Login successful:", data);
+
+      // Set user in auth store
+      const { useAuthStore } = await import("@/store/auth");
+      useAuthStore.getState().setUser({
+        ...data.user,
+        token: data.token,
+      });
+
+      // Check for redirect path in sessionStorage
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        router.push(redirectPath);
+      } else {
+        // Default redirect to dashboard
+        router.push("/dashboard");
+      }
+
+      setError(""); // clear any old errors
+  } catch (err) {
+    console.error("Login error:", err);
+    setError("Something went wrong. Please try again.");
   }
+};
+
+
+
 
   return (
     <div className="gradient-bg min-h-screen">
@@ -84,7 +138,7 @@ export default function LoginPage() {
             <form className="space-y-6" onSubmit={onSubmit}>
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-white mb-2">
                   Email Address
                 </label>
                 <div className="relative">
@@ -108,7 +162,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 bg-white/80"
+                    className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300 transition-all duration-300 bg-white text-gray-900"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -116,7 +170,7 @@ export default function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-white mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -140,7 +194,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 bg-white/80"
+                    className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300 transition-all duration-300 bg-white text-gray-900"
                     placeholder="Enter your password"
                   />
                 </div>
@@ -175,11 +229,11 @@ export default function LoginPage() {
               </button>
 
               {/* Signup Link */}
-              <p className="text-center text-sm text-gray-600 mt-4">
-                Don’t have an account?{" "}
+              <p className="text-center text-sm text-white/80 mt-4">
+                Don't have an account?{" "}
                 <Link
                   href="/signup"
-                  className="text-primary-600 font-semibold hover:underline"
+                  className="text-primary-300 font-semibold hover:underline"
                 >
                   Sign up
                 </Link>
@@ -187,11 +241,11 @@ export default function LoginPage() {
 
               {/* Demo Info */}
               <div className="text-center pt-4">
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <p className="text-xs text-primary-700 font-medium">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
+                  <p className="text-xs text-white font-medium">
                     🚀 Demo Account Ready
                   </p>
-                  <p className="text-xs text-primary-600 mt-1">
+                  <p className="text-xs text-white/80 mt-1">
                     demo@taskflow.com • password123
                   </p>
                 </div>
@@ -211,7 +265,7 @@ export default function LoginPage() {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .glass-effect {
-          background: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.15);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.2);
         }
