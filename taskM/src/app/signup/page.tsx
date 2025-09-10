@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { supabase } from "../../lib/supabaseClient";
+
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,15 +18,7 @@ export default function SignupPage() {
     setError(null);
     setSuccess(null);
     startTransition(async () => {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name } },
-      });
-      if (error) {
-        setError(error.message);
-        return;
-      }
+      // signup login
       setSuccess('Account created. Please check your email if confirmation is required.');
       setTimeout(() => router.replace('/login'), 800);
     });

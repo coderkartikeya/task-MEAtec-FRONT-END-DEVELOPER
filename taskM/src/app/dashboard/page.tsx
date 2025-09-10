@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { useTasksStore } from '@/store/tasks'
 import { useEffect, useState } from 'react'
-import { Task } from '@/models/task'
+
 
 export default function DashboardPage() {
   const router = useRouter()

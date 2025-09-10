@@ -3,7 +3,6 @@
 
 import { ReactNode, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
-import { useTasksStore } from "@/store/tasks";
 
 export function ZustandProvider({ children }: { children: ReactNode }) {
   // Hydrate stores

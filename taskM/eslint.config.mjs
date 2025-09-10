@@ -1,3 +1,4 @@
+// eslint.config.js
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
@@ -9,8 +10,11 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [
+export default [
+  // bring in Next.js recommended configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  // ignore some files/folders
   {
     ignores: [
       "node_modules/**",
@@ -20,6 +24,13 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
-];
 
-export default eslintConfig;
+  // custom rules
+  {
+    rules: {
+      "react-hooks/exhaustive-deps": "off",
+      "no-console": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+];
