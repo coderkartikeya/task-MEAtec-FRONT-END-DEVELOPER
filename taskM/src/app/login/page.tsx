@@ -62,7 +62,7 @@ export default function LoginPage() {
     }
 
     const data = await f.json();
-      console.log("Login successful:", data);
+      // console.log("Login successful:", data);
 
       // Set user in auth store
       const { useAuthStore } = await import("@/store/auth");
